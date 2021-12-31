@@ -17,7 +17,12 @@ const itemSchema = new mongoose.Schema ({
     name: String
 });
 
+const workItemSchema = new mongoose.Schema ({
+    name: String
+});
+
 const Item = mongoose.model("Item", itemSchema);
+const WorkItem = mongoose.model("WorkItem", workItemSchema);
 
 const item1 = new Item ({
     name: "Welcome to your todo list"
@@ -64,6 +69,16 @@ app.post("/", function(req,res){
     res.redirect("/");
 })
 
+app.post("/delete", function(req,res){
+    const checkedItemID = req.body.checkedBox;
+
+    Item.findByIdAndDelete(checkedItemID, function(err,checkedItemID){
+        err ? console.log(err) : console.log(checkedItemID + "deleted!")
+        res.redirect("/");
+    })
+    
+})
+
 app.get("/work", function(req,res){
     const workTitle = "Work List";
     route = "work";
@@ -71,8 +86,14 @@ app.get("/work", function(req,res){
 })
 
 app.post("/work", function(req,res){
-    const newWorkItem = req.body.newEntry;
-    workItems.push(newWorkItem)
+    const itemName = req.body.newEntry;
+
+    const workItem = new WorkItem ({
+        name: itemName
+    });
+
+    workItem.save();
+    
     res.redirect("/work");
 })
 
