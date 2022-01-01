@@ -41,12 +41,9 @@ const item3 = new Item ({
 const defaultItems = [item1, item2, item3];
 const workItems = [];
 
-
-
-let route = "";
+const day = date.getDay();
 
 app.get('/', (req,res) => {
-    const day = date.getDay();
     
     Item.find({}, function(err,foundItems) {
         if (foundItems.length === 0 ) {
@@ -86,14 +83,24 @@ app.get("/:customListName", function (req,res){
 
 app.post("/", function(req,res){
     const itemName = req.body.newEntry;
+    const listName = req.body.list;
 
     const item = new Item ({
         name: itemName
     });
 
-    item.save();
-    
-    res.redirect("/");
+    if (listName === day){
+        item.save();
+        res.redirect("/");
+
+    } else {
+        List.findOne({name: listName} , function(err,foundList){
+            foundList.items.push(item);
+            foundList.save();
+
+            res.redirect('/' + listName);
+        })
+    }
 })
 
 app.post("/delete", function(req,res){
@@ -104,23 +111,6 @@ app.post("/delete", function(req,res){
         res.redirect("/");
     })
     
-})
-
-
-// app.post("/work", function(req,res){
-//     const itemName = req.body.newEntry;
-
-//     const workItem = new WorkItem ({
-//         name: itemName
-//     });
-
-//     workItem.save();
-    
-//     res.redirect("/work");
-// })
-
-app.get("/about",function(req,res){
-    res.render("about");
 })
 
 app.listen(3000, () => {
