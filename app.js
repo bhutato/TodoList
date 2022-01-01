@@ -105,11 +105,23 @@ app.post("/", function(req,res){
 
 app.post("/delete", function(req,res){
     const checkedItemID = req.body.checkedBox;
+    const listName = req.body.listName;
 
-    Item.findByIdAndDelete(checkedItemID, function(err,checkedItemID){
-        err ? console.log(err) : console.log(checkedItemID + "deleted!")
-        res.redirect("/");
-    })
+    if (listName === day){
+        Item.findByIdAndDelete(checkedItemID, function(err,checkedItemID){
+            if(!err){
+                res.redirect("/");
+            }
+        })
+    } else{
+        List.findOneAndUpdate({name: listName},{ $pull: { items: {_id: checkedItemID} } }, function(err,foundList){
+            if(!err){
+                res.redirect('/' + listName);
+            }
+        });
+    }
+
+    
     
 })
 
