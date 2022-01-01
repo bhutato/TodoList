@@ -17,12 +17,14 @@ const itemSchema = new mongoose.Schema ({
     name: String
 });
 
-const workItemSchema = new mongoose.Schema ({
-    name: String
+const listSchema = new mongoose.Schema ({
+    name: String,
+    items: [itemSchema]
+
 });
 
 const Item = mongoose.model("Item", itemSchema);
-const WorkItem = mongoose.model("WorkItem", workItemSchema);
+const List = mongoose.model("List", listSchema);
 
 const item1 = new Item ({
     name: "Welcome to your todo list"
@@ -39,6 +41,8 @@ const item3 = new Item ({
 const defaultItems = [item1, item2, item3];
 const workItems = [];
 
+
+
 let route = "";
 
 app.get('/', (req,res) => {
@@ -51,11 +55,34 @@ app.get('/', (req,res) => {
             });
             res.redirect("/");
         } else {
-            res.render('list', {listTitle: day, newListItems:foundItems, route:route});
+            res.render('list', {listTitle: day, newListItems:foundItems});
         }
     });
 
 })
+
+//dynamic routes for custom lists
+app.get("/:customListName", function (req,res){ 
+    const customListName = req.params.customListName;
+
+    List.findOne({name: customListName},function(err,foundList){
+       if (!err){
+           if (!foundList){
+               //create a new list
+               const list = new List({
+                name: customListName,
+                items: defaultItems
+            });
+            list.save();
+            res.redirect("/" + customListName);
+
+           } else {
+               //show an existing list
+               res.render("list", {listTitle: customListName, newListItems: foundList.items});
+           }
+       }
+    })
+});
 
 app.post("/", function(req,res){
     const itemName = req.body.newEntry;
@@ -79,23 +106,18 @@ app.post("/delete", function(req,res){
     
 })
 
-app.get("/work", function(req,res){
-    const workTitle = "Work List";
-    route = "work";
-    res.render('list', {listTitle: workTitle, newListItems: workItems, route:route});
-})
 
-app.post("/work", function(req,res){
-    const itemName = req.body.newEntry;
+// app.post("/work", function(req,res){
+//     const itemName = req.body.newEntry;
 
-    const workItem = new WorkItem ({
-        name: itemName
-    });
+//     const workItem = new WorkItem ({
+//         name: itemName
+//     });
 
-    workItem.save();
+//     workItem.save();
     
-    res.redirect("/work");
-})
+//     res.redirect("/work");
+// })
 
 app.get("/about",function(req,res){
     res.render("about");
